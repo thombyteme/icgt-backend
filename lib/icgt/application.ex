@@ -10,6 +10,7 @@ defmodule Icgt.Application do
     children = [
       IcgtWeb.Telemetry,
       Icgt.Repo,
+      {Oban, Application.fetch_env!(:icgt, Oban)},
       {DNSCluster, query: Application.get_env(:icgt, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Icgt.PubSub},
       # Start a worker by calling: Icgt.Worker.start_link(arg)
