@@ -2,6 +2,8 @@ defmodule Icgt.Tournaments.Match do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Icgt.Tournaments.Team
+
   schema "matches" do
     field :source, :string
     field :external_id, :string
@@ -12,8 +14,13 @@ defmodule Icgt.Tournaments.Match do
     field :timezone, :string, default: "Europe/Amsterdam"
 
     field :field, :string
-    field :team_a, :string
-    field :team_b, :string
+    field :date_iso, :date
+    field :poule, :string
+    field :referee, :string
+    field :team_a_name, :string
+    field :team_b_name, :string
+    belongs_to :team_a, Team
+    belongs_to :team_b, Team
     field :status, :string
 
     field :raw_data, :map, default: %{}
@@ -34,8 +41,13 @@ defmodule Icgt.Tournaments.Match do
       :starts_at_local,
       :timezone,
       :field,
-      :team_a,
-      :team_b,
+      :date_iso,
+      :poule,
+      :referee,
+      :team_a_name,
+      :team_b_name,
+      :team_a_id,
+      :team_b_id,
       :status,
       :raw_data,
       :captains_notified_at,

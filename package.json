@@ -1,0 +1,27 @@
+{
+  "name": "icgt",
+  "version": "1.0.0",
+  "description": "To start your Phoenix server:",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thombyteme/icgt-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thombyteme/icgt-backend/issues"
+  },
+  "homepage": "https://github.com/thombyteme/icgt-backend#readme",
+  "dependencies": {
+    "playwright": "^1.59.1"
+  }
+}

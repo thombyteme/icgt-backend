@@ -12,8 +12,13 @@ defmodule Icgt.Repo.Migrations.CreateMatches do
       add :timezone, :string, default: "Europe/Amsterdam"
 
       add :field, :string
-      add :team_a, :string
-      add :team_b, :string
+      add :date_iso, :date
+      add :poule, :string
+      add :referee, :string
+      add :team_a_name, :string
+      add :team_b_name, :string
+      add :team_a_id, :bigint
+      add :team_b_id, :bigint
       add :status, :string
 
       add :raw_data, :map, null: false, default: %{}
@@ -27,5 +32,7 @@ defmodule Icgt.Repo.Migrations.CreateMatches do
     create unique_index(:matches, [:source, :unique_key])
     create index(:matches, [:starts_at])
     create index(:matches, [:status])
+    create index(:matches, [:team_a_id])
+    create index(:matches, [:team_b_id])
   end
 end
