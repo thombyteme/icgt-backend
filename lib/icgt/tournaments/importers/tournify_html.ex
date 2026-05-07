@@ -11,8 +11,12 @@ defmodule Icgt.Tournaments.Importers.TournifyHtml do
     wait_ms = Keyword.get(opts, :wait_ms, @default_wait_ms)
 
     with {:ok, payload} <- scrape(url, wait_ms) do
+      matches =
+        (payload["matches"] || [])
+        |> Enum.reject(&ignored_match?/1)
+
       {ok_count, error_count} =
-        Enum.reduce(payload["matches"] || [], {0, 0}, fn row, {ok_acc, err_acc} ->
+        Enum.reduce(matches, {0, 0}, fn row, {ok_acc, err_acc} ->
           attrs = to_match_attrs(row)
 
           case Tournaments.upsert_match(attrs) do
@@ -21,9 +25,24 @@ defmodule Icgt.Tournaments.Importers.TournifyHtml do
           end
         end)
 
-      total = length(payload["matches"] || [])
+      total = length(matches)
       {:ok, %{imported: ok_count, failed: error_count, total: total}}
     end
+  end
+
+  defp ignored_match?(row) do
+    team_a = row["teamA"] || ""
+    team_b = row["teamB"] || ""
+
+    ignored_team_name?(team_a) or ignored_team_name?(team_b)
+  end
+
+  defp ignored_team_name?(name) when is_binary(name) do
+    normalized = String.downcase(name)
+
+    String.contains?(normalized, "<leeg team>") or
+      String.contains?(normalized, "poule a") or
+      String.contains?(normalized, "poule b")
   end
 
   defp scrape(url, wait_ms) do
