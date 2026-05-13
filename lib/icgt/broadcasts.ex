@@ -10,8 +10,7 @@ defmodule Icgt.Broadcasts do
   alias Icgt.Tournaments.Match
 
   @match_duration_minutes 25
-  @pre_end_announcement_offset_minutes 10
-  @first_round_announcement_offset_minutes -15
+  @round_announcement_lead_minutes -15
   @topic "broadcasts"
 
   def topic, do: @topic
@@ -229,7 +228,7 @@ defmodule Icgt.Broadcasts do
   end
 
   defp maybe_add_first_round_announcement(specs, round, 0) do
-    scheduled_for = add_minutes(round.starts_at, @first_round_announcement_offset_minutes)
+    scheduled_for = add_minutes(round.starts_at, @round_announcement_lead_minutes)
     [round_announcement_spec(round.starts_at, round.starts_at, scheduled_for) | specs]
   end
 
@@ -238,7 +237,7 @@ defmodule Icgt.Broadcasts do
   defp maybe_add_pre_end_announcement(specs, _round, nil), do: specs
 
   defp maybe_add_pre_end_announcement(specs, round, next_round) do
-    scheduled_for = add_minutes(round.starts_at, @pre_end_announcement_offset_minutes)
+    scheduled_for = add_minutes(next_round.starts_at, @round_announcement_lead_minutes)
 
     [
       round_announcement_spec(round.starts_at, next_round.starts_at, scheduled_for)

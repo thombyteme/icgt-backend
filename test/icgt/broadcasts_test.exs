@@ -36,7 +36,7 @@ defmodule Icgt.BroadcastsTest do
 
     assert Enum.map(broadcasts, &{&1.kind, &1.target_round_starts_at, &1.scheduled_for}) == [
              {"round_announcement", first_round, ~U[2026-05-23 09:45:00Z]},
-             {"round_announcement", next_round, ~U[2026-05-23 10:10:00Z]},
+             {"round_announcement", next_round, ~U[2026-05-23 10:15:00Z]},
              {"referee_whistle", first_round, ~U[2026-05-23 10:25:00Z]},
              {"round_announcement", next_round, ~U[2026-05-23 10:25:00Z]},
              {"referee_whistle", next_round, ~U[2026-05-23 10:55:00Z]}
@@ -101,6 +101,27 @@ defmodule Icgt.BroadcastsTest do
              "referee_whistle",
              "round_announcement"
            ]
+  end
+
+  test "announces the next round fifteen minutes before that round starts" do
+    current_round = ~U[2026-05-23 18:30:00Z]
+    next_round = ~U[2026-05-23 19:00:00Z]
+    insert_match!(current_round, "1")
+    insert_match!(next_round, "2")
+
+    Broadcasts.materialize_all_broadcasts()
+
+    next_round_early_announcement =
+      Repo.one!(
+        from b in Broadcast,
+          where:
+            b.kind == "round_announcement" and
+              b.round_starts_at == ^current_round and
+              b.target_round_starts_at == ^next_round and
+              b.scheduled_for != ^DateTime.add(current_round, 25 * 60, :second)
+      )
+
+    assert next_round_early_announcement.scheduled_for == ~U[2026-05-23 18:45:00Z]
   end
 
   test "changed text resets a non-played broadcast to pending" do
