@@ -27,6 +27,15 @@ config :icgt, :twilio,
   auth_token: System.get_env("TWILIO_AUTH_TOKEN"),
   from_phone_number: System.get_env("TWILIO_WHATSAPP_FROM")
 
+config :icgt, :eleven_labs,
+  api_key: System.get_env("ELEVENLABS_API_KEY"),
+  voice_id: System.get_env("ELEVENLABS_VOICE_ID"),
+  model: System.get_env("ELEVENLABS_MODEL")
+
+if System.get_env("BROADCAST_AUDIO_DIR") do
+  config :icgt, :broadcast_audio_dir, System.get_env("BROADCAST_AUDIO_DIR")
+end
+
 config :icgt, :toptaal,
   base_url: System.get_env("TOPTAAL_API_BASE_URL"),
   api_token: System.get_env("TOPTAAL_API_TOKEN")

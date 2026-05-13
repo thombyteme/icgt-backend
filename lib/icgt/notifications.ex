@@ -3,6 +3,7 @@ defmodule Icgt.Notifications do
 
   import Ecto.Query, warn: false
 
+  alias Icgt.AmsterdamTime
   alias Icgt.Notifications.MatchNotification
   alias Icgt.Repo
 
@@ -22,7 +23,7 @@ defmodule Icgt.Notifications do
   end
 
   def mark_sent(match_id, contact_person_id, provider_message_id, kind \\ @kind) do
-    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    now = AmsterdamTime.now()
 
     attrs = %{
       match_id: match_id,
@@ -73,7 +74,7 @@ defmodule Icgt.Notifications do
           provider_message_id: Map.get(attrs, :provider_message_id),
           sent_at: Map.get(attrs, :sent_at),
           last_error: Map.get(attrs, :last_error),
-          updated_at: DateTime.utc_now() |> DateTime.truncate(:second)
+          updated_at: AmsterdamTime.now()
         ]
       ],
       conflict_target: [:match_id, :team_contact_person_id, :kind]

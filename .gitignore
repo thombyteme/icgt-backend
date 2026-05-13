@@ -35,3 +35,6 @@ icgt-*.tar
 npm-debug.log
 /assets/node_modules/
 /node_modules/
+
+# Local environment variables and secrets.
+.envrc

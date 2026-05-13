@@ -67,8 +67,8 @@ config :icgt, Oban,
     {Oban.Plugins.Pruner, max_age: 60 * 60 * 24},
     {Oban.Plugins.Cron,
      crontab: [
-       {"*/5 * * * *", Icgt.Workers.ImportTournifyMatchesWorker},
-       {"* * * * *", Icgt.Workers.NotifyUpcomingMatchesWorker}
+       # {"*/5 * * * *", Icgt.Workers.ImportTournifyMatchesWorker},
+       # {"* * * * *", Icgt.Workers.NotifyUpcomingMatchesWorker}
      ]}
   ]
 

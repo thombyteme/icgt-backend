@@ -1,6 +1,7 @@
 defmodule Icgt.Tournaments.Importers.TournifyHtml do
   @moduledoc false
 
+  alias Icgt.AmsterdamTime
   alias Icgt.Tournaments
 
   @default_url "https://tournifyapp.com/live/ariebonkenburgtoernooi/schedule"
@@ -62,7 +63,7 @@ defmodule Icgt.Tournaments.Importers.TournifyHtml do
   defp to_match_attrs(row) do
     date_iso = row["dateIso"]
     st = row["st"]
-    timezone = "Europe/Amsterdam"
+    timezone = AmsterdamTime.timezone()
     starts_at_local = build_local_datetime(date_iso, st)
     starts_at = local_to_utc(starts_at_local, timezone)
     unique_key = build_unique_key(row)
@@ -106,14 +107,7 @@ defmodule Icgt.Tournaments.Importers.TournifyHtml do
   defp build_local_datetime(_, _), do: nil
   defp local_to_utc(nil, _timezone), do: nil
 
-  defp local_to_utc(local, timezone) do
-    case DateTime.from_naive(local, timezone) do
-      {:ok, datetime} -> DateTime.shift_zone!(datetime, "Etc/UTC")
-      {:ambiguous, first, _second} -> DateTime.shift_zone!(first, "Etc/UTC")
-      {:gap, before, _after} -> DateTime.shift_zone!(before, "Etc/UTC")
-      {:error, :utc_only_time_zone_database} -> DateTime.from_naive!(local, "Etc/UTC")
-    end
-  end
+  defp local_to_utc(local, _timezone), do: AmsterdamTime.as_stored_datetime(local)
 
   defp normalize_field(nil), do: nil
 

@@ -4,17 +4,26 @@ defmodule Icgt.Workers.ImportTournifyMatchesWorker do
 
   require Logger
 
+  alias Icgt.Broadcasts
   alias Icgt.Tournaments.Importers.TournifyHtml
 
   @impl Oban.Worker
   def perform(_job) do
-    case TournifyHtml.import() do
+    importer = Application.get_env(:icgt, :tournify_importer, TournifyHtml)
+
+    case importer.import() do
       {:ok, %{imported: imported, failed: failed, total: total}} ->
+        materialized = Broadcasts.materialize_all_broadcasts()
+
         Logger.info(
-          "Imported Tournify matches via Oban: imported=#{imported} failed=#{failed} total=#{total}"
+          "Imported Tournify matches via Oban: imported=#{imported} failed=#{failed} total=#{total} broadcasts=#{inspect(materialized)}"
         )
 
-        :ok
+        if Enum.any?(materialized, &match?({:error, _}, &1)) do
+          {:error, :broadcast_materialization_failed}
+        else
+          :ok
+        end
 
       {:error, reason} ->
         Logger.error("Failed Tournify match import via Oban: #{inspect(reason)}")

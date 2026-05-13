@@ -4,13 +4,14 @@ defmodule Icgt.Workers.NotifyUpcomingMatchesWorker do
 
   require Logger
 
+  alias Icgt.AmsterdamTime
   alias Icgt.Notifications
   alias Icgt.Notifications.TwilioWhatsapp
   alias Icgt.Tournaments
 
   @impl Oban.Worker
   def perform(_job) do
-    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    now = AmsterdamTime.now()
     window_start = DateTime.add(now, 10 * 60, :second)
     window_end = DateTime.add(window_start, 59, :second)
 

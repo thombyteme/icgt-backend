@@ -26,10 +26,66 @@ import {hooks as colocatedHooks} from "phoenix-colocated/icgt"
 import topbar from "../vendor/topbar"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+const BroadcastPlayer = {
+  mounted() {
+    this.enabled = false
+    this.playingId = null
+    this.audio = new Audio()
+    this.statusEl = this.el.querySelector("#broadcast-player-status")
+    this.startButton = this.el.querySelector("#broadcast-start-button")
+
+    this.startButton?.addEventListener("click", () => {
+      this.enabled = true
+      this.setStatus("Audio staat aan. Wacht op de volgende omroep.")
+      this.playCurrent()
+    })
+
+    this.audio.addEventListener("ended", () => {
+      if (this.playingId) {
+        this.pushEvent("mark_played", {id: String(this.playingId)})
+      }
+
+      this.playingId = null
+      this.setStatus("Omroep afgespeeld. Wacht op de volgende audio.")
+    })
+
+    this.audio.addEventListener("error", () => {
+      this.setStatus("Audio kon niet worden afgespeeld.")
+      this.playingId = null
+    })
+  },
+
+  updated() {
+    this.playCurrent()
+  },
+
+  playCurrent() {
+    if (!this.enabled || this.playingId) return
+
+    const currentId = this.el.dataset.currentId
+    const audioUrl = this.el.dataset.currentAudioUrl
+
+    if (!currentId || !audioUrl) return
+
+    this.playingId = currentId
+    this.audio.src = audioUrl
+    this.setStatus("Omroep wordt afgespeeld.")
+
+    this.audio.play().catch(() => {
+      this.playingId = null
+      this.setStatus("Klik opnieuw op Start audio om afspelen toe te staan.")
+    })
+  },
+
+  setStatus(message) {
+    if (this.statusEl) this.statusEl.textContent = message
+  }
+}
+
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {...colocatedHooks, BroadcastPlayer},
 })
 
 // Show progress bar on live navigation and form submits
@@ -80,4 +136,3 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
-

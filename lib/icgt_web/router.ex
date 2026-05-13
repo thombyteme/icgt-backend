@@ -1,5 +1,6 @@
 defmodule IcgtWeb.Router do
   use IcgtWeb, :router
+  import Plug.BasicAuth
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -14,10 +15,23 @@ defmodule IcgtWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :admin_auth do
+    plug :basic_auth, username: "ByteMe", password: "BakkumMaakMeNouNietGek"
+  end
+
   scope "/", IcgtWeb do
     pipe_through :browser
 
     get "/", PageController, :home
+    live "/broadcasts/player", BroadcastPlayerLive, :show
+    get "/broadcasts/:id/audio", BroadcastAudioController, :show
+  end
+
+  scope "/", IcgtWeb do
+    pipe_through [:browser, :admin_auth]
+
+    live "/teams", TeamListLive, :index
+    live "/teams/:id", TeamShowLive, :show
   end
 
   # Other scopes may use custom stacks.

@@ -1,0 +1,8 @@
+export ELEVENLABS_API_KEY="your-elevenlabs-api-key"
+
+# Optional. The application has these defaults when omitted.
+export ELEVENLABS_VOICE_ID="XSQQLeoHwWnBv8tjJ1T7"
+export ELEVENLABS_MODEL="eleven_flash_v2_5"
+
+# Optional. Defaults to priv/static/broadcasts.
+export BROADCAST_AUDIO_DIR="$PWD/priv/static/broadcasts"
