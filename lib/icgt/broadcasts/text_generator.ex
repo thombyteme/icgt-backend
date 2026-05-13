@@ -57,7 +57,7 @@ defmodule Icgt.Broadcasts.TextGenerator do
 
   defp match_line(match) do
     field = field_text(match.field)
-    poule = value_or_fallback(match.poule, "onbekende klasse")
+    poule = match.poule |> value_or_fallback("onbekende klasse") |> poule_text()
     team_a = team_name(match, :team_a, :team_a_name)
     team_b = team_name(match, :team_b, :team_b_name)
 
@@ -68,6 +68,12 @@ defmodule Icgt.Broadcasts.TextGenerator do
       end
 
     "Op #{field} spelen de volgende teams uit #{poule} tegen elkaar. #{team_a} tegen #{team_b}#{referee}"
+  end
+
+  defp poule_text(text) do
+    text
+    |> String.replace(~r/\bPoule\b/i, "Pool")
+    |> String.replace(" -", "")
   end
 
   defp team_name(match, team_assoc, fallback_field) do

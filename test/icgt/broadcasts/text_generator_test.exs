@@ -68,6 +68,25 @@ defmodule Icgt.Broadcasts.TextGeneratorTest do
     refute text =~ "ADO'20 zat. 7"
   end
 
+  test "normalizes poule text for speech" do
+    text =
+      TextGenerator.round_announcement(~U[2026-05-23 16:30:00Z], [
+        %Match{
+          starts_at_local: ~N[2026-05-23 18:30:00],
+          field: "1",
+          poule: "Poule B - Klasse 3",
+          team_a_name: "FC Uitgeest 5",
+          team_b_name: "St. Adelbert",
+          referee: "Eric Koning"
+        }
+      ])
+
+    assert text =~ "uit Pool B Klasse 3 tegen elkaar"
+    refute text =~ "Poule B - Klasse 3"
+    refute text =~ "Poule"
+    refute text =~ " -"
+  end
+
   test "falls back to match team names when broadcast names are blank" do
     text =
       TextGenerator.round_announcement(~U[2026-05-23 12:00:00Z], [
