@@ -11,6 +11,19 @@ defmodule Icgt.Tournaments do
     Repo.all(from m in Match, order_by: [asc: m.starts_at, asc: m.id])
   end
 
+  def list_matches_starting_between(start_at, end_at) do
+    Repo.all(
+      from m in Match,
+        where:
+          not is_nil(m.starts_at) and
+            is_nil(m.captains_notified_at) and
+            m.starts_at >= ^start_at and
+            m.starts_at <= ^end_at,
+        preload: [team_a: :contact_people, team_b: :contact_people],
+        order_by: [asc: m.starts_at, asc: m.id]
+    )
+  end
+
   def upsert_match(attrs) do
     with {:ok, team_a_id} <- ensure_team_id(Map.get(attrs, :team_a_name)),
          {:ok, team_b_id} <- ensure_team_id(Map.get(attrs, :team_b_name)) do
@@ -44,6 +57,18 @@ defmodule Icgt.Tournaments do
         conflict_target: [:source, :unique_key]
       )
     end
+  end
+
+  def mark_captains_notified(match_id) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    {updated, _} =
+      Repo.update_all(
+        from(m in Match, where: m.id == ^match_id and is_nil(m.captains_notified_at)),
+        set: [captains_notified_at: now, updated_at: now]
+      )
+
+    {:ok, updated}
   end
 
   defp ensure_team_id(nil), do: {:ok, nil}

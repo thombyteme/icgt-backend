@@ -22,6 +22,15 @@ end
 
 config :icgt, IcgtWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+config :icgt, :twilio,
+  account_sid: System.get_env("TWILIO_ACCOUNT_SID"),
+  auth_token: System.get_env("TWILIO_AUTH_TOKEN"),
+  from_phone_number: System.get_env("TWILIO_WHATSAPP_FROM")
+
+config :icgt, :toptaal,
+  base_url: System.get_env("TOPTAAL_API_BASE_URL"),
+  api_token: System.get_env("TOPTAAL_API_TOKEN")
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

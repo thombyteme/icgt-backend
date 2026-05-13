@@ -62,12 +62,13 @@ config :phoenix, :json_library, Jason
 
 config :icgt, Oban,
   repo: Icgt.Repo,
-  queues: [default: 10, scrapers: 5],
+  queues: [default: 10, scrapers: 5, notifications: 10],
   plugins: [
     {Oban.Plugins.Pruner, max_age: 60 * 60 * 24},
     {Oban.Plugins.Cron,
      crontab: [
-       {"*/5 * * * *", Icgt.Workers.ImportTournifyMatchesWorker}
+       {"*/5 * * * *", Icgt.Workers.ImportTournifyMatchesWorker},
+       {"* * * * *", Icgt.Workers.NotifyUpcomingMatchesWorker}
      ]}
   ]
 
