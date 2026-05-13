@@ -22,10 +22,12 @@ end
 
 config :icgt, IcgtWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
-config :icgt, :twilio,
-  account_sid: System.get_env("TWILIO_ACCOUNT_SID"),
-  auth_token: System.get_env("TWILIO_AUTH_TOKEN"),
-  from_phone_number: System.get_env("TWILIO_WHATSAPP_FROM")
+config :icgt, :whatsapp_business,
+  phone_number_id: System.get_env("WHATSAPP_BUSINESS_PHONE_NUMBER_ID"),
+  access_token: System.get_env("WHATSAPP_BUSINESS_ACCESS_TOKEN"),
+  match_template_name:
+    System.get_env("WHATSAPP_MATCH_TEMPLATE_NAME") || "icgt_match_notification",
+  language: System.get_env("WHATSAPP_TEMPLATE_LANGUAGE") || "nl"
 
 config :icgt, :eleven_labs,
   api_key: System.get_env("ELEVENLABS_API_KEY"),

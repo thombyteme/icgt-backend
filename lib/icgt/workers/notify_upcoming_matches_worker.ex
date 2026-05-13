@@ -6,7 +6,7 @@ defmodule Icgt.Workers.NotifyUpcomingMatchesWorker do
 
   alias Icgt.AmsterdamTime
   alias Icgt.Notifications
-  alias Icgt.Notifications.TwilioWhatsapp
+  alias Icgt.Notifications.WhatsAppBusiness
   alias Icgt.Tournaments
 
   @impl Oban.Worker
@@ -27,21 +27,23 @@ defmodule Icgt.Workers.NotifyUpcomingMatchesWorker do
   end
 
   defp notify_match(match) do
-    contacts = collect_contacts(match)
+    recipients = collect_recipients(match)
 
-    if contacts == [] do
+    if recipients == [] do
       Logger.warning("Match #{match.id} has no contact people, skipping notification send.")
       {:ok, :no_contacts}
     else
       send_results =
-        Enum.map(contacts, fn contact ->
-          send_once(match, contact)
+        Enum.map(recipients, fn recipient ->
+          send_once(match, recipient)
         end)
 
       if Enum.any?(send_results, &match?({:error, _}, &1)) do
         {:error, {:match_send_failed, match.id}}
       else
-        case Notifications.all_sent_for_contacts?(match.id, Enum.map(contacts, & &1.id)) do
+        contact_ids = Enum.map(recipients, & &1.contact.id)
+
+        case Notifications.all_sent_for_contacts?(match.id, contact_ids) do
           true ->
             _ = Tournaments.mark_captains_notified(match.id)
             {:ok, :sent}
@@ -53,13 +55,15 @@ defmodule Icgt.Workers.NotifyUpcomingMatchesWorker do
     end
   end
 
-  defp send_once(match, contact) do
+  defp send_once(match, recipient) do
+    contact = recipient.contact
+
     if Notifications.sent?(match.id, contact.id) do
       {:ok, :already_sent}
     else
-      body = build_message(match, contact)
+      variables = template_variables(match, recipient)
 
-      case TwilioWhatsapp.send_message(contact.phone_number, body) do
+      case WhatsAppBusiness.send_match_notification(contact.phone_number, variables) do
         {:ok, provider_message_id} ->
           _ = Notifications.mark_sent(match.id, contact.id, provider_message_id)
           {:ok, :sent}
@@ -76,33 +80,60 @@ defmodule Icgt.Workers.NotifyUpcomingMatchesWorker do
     end
   end
 
-  defp collect_contacts(match) do
-    team_a_contacts = if match.team_a, do: match.team_a.contact_people, else: []
-    team_b_contacts = if match.team_b, do: match.team_b.contact_people, else: []
-
-    (team_a_contacts ++ team_b_contacts)
-    |> Enum.uniq_by(& &1.id)
-    |> Enum.filter(&valid_phone_number?/1)
+  defp collect_recipients(match) do
+    []
+    |> add_team_recipients(match.team_a, match.team_a_name, match.team_b, match.team_b_name)
+    |> add_team_recipients(match.team_b, match.team_b_name, match.team_a, match.team_a_name)
+    |> Enum.filter(&valid_phone_number?(&1.contact))
+    |> Enum.uniq_by(& &1.contact.id)
   end
 
   defp valid_phone_number?(contact) do
     is_binary(contact.phone_number) and String.trim(contact.phone_number) != ""
   end
 
-  defp build_message(match, contact) do
-    starts_at_text =
-      case match.starts_at_local do
-        %NaiveDateTime{} = dt -> Calendar.strftime(dt, "%d-%m-%Y %H:%M")
-        _ -> "onbekende tijd"
-      end
+  defp add_team_recipients(recipients, nil, _team_name, _opponent, _opponent_name), do: recipients
 
-    [
-      "Hoi #{contact.name},",
-      "Je team speelt over 10 minuten.",
-      "Wedstrijd: #{match.team_a_name} vs #{match.team_b_name}",
-      "Veld: #{match.field || "-"}",
-      "Start: #{starts_at_text}"
-    ]
-    |> Enum.join("\n")
+  defp add_team_recipients(recipients, team, team_name, opponent, opponent_name) do
+    team_display_name = display_team_name(team, team_name)
+    opponent_display_name = display_team_name(opponent, opponent_name)
+
+    team.contact_people
+    |> Enum.map(fn contact ->
+      %{
+        contact: contact,
+        team: team_display_name,
+        opponent_team: opponent_display_name
+      }
+    end)
+    |> Kernel.++(recipients)
   end
+
+  defp template_variables(match, recipient) do
+    %{
+      "team" => recipient.team,
+      "veld_nummer" => field_number(match.field),
+      "tegenstander_team" => recipient.opponent_team
+    }
+  end
+
+  defp display_team_name(team, fallback_name) do
+    [team_value(team, :broadcast_name), team_value(team, :name), fallback_name]
+    |> Enum.find_value(&present_string/1) || "onbekend team"
+  end
+
+  defp team_value(nil, _field), do: nil
+  defp team_value(team, field), do: Map.get(team, field)
+
+  defp field_number(nil), do: "-"
+  defp field_number(field), do: present_string(field) || "-"
+
+  defp present_string(value) when is_binary(value) do
+    case String.trim(value) do
+      "" -> nil
+      trimmed -> trimmed
+    end
+  end
+
+  defp present_string(_value), do: nil
 end

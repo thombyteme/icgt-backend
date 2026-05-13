@@ -6,3 +6,8 @@ export ELEVENLABS_MODEL="eleven_flash_v2_5"
 
 # Optional. Defaults to priv/static/broadcasts.
 export BROADCAST_AUDIO_DIR="$PWD/priv/static/broadcasts"
+
+export WHATSAPP_BUSINESS_PHONE_NUMBER_ID="your-meta-phone-number-id"
+export WHATSAPP_BUSINESS_ACCESS_TOKEN="your-meta-access-token"
+export WHATSAPP_MATCH_TEMPLATE_NAME="icgt_match_notification"
+export WHATSAPP_TEMPLATE_LANGUAGE="nl"
